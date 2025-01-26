@@ -1,15 +1,16 @@
-'use client';
+"use client"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import Navbar from "@/components/ui/Navbar";
-import { FileText, MessageSquare, Stethoscope, Watch, Phone, Video, Send } from "lucide-react"
+import Navbar from "@/components/ui/Navbar"
+import { FileText, MessageSquare, Stethoscope, Watch, Phone, Video, Send, Camera } from "lucide-react"
 import Link from "next/link"
+
 export default function Home() {
   return (
-    <div>
-
-    <Navbar/>
+    <div className="flex flex-col min-h-screen">
+      <Navbar />
       <main className="flex-1">
         <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-blue-50">
           <div className="container px-4 md:px-6">
@@ -63,6 +64,11 @@ export default function Home() {
                 title="Virtual Consultation"
                 description="Connect with healthcare professionals via video calls."
               />
+              <FeatureCard
+                icon={<Camera className="h-10 w-10 mb-4 text-pink-500" />}
+                title="Rash & Injury Analysis"
+                description="Upload photos of rashes or injuries for AI-powered diagnosis and treatment suggestions."
+              />
             </div>
           </div>
         </section>
@@ -92,10 +98,10 @@ export default function Home() {
           </Link>
         </nav>
       </footer>
-    
-      </div>
-  );
+    </div>
+  )
 }
+
 function FeatureCard({ icon, title, description }) {
   return (
     <div className="flex flex-col items-center text-center p-4 border rounded-lg shadow-sm hover:shadow-md transition-shadow">
@@ -105,4 +111,4 @@ function FeatureCard({ icon, title, description }) {
     </div>
   )
 }
-  
+
