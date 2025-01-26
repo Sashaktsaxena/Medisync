@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import Navbar from "@/components/Navbar"
+import Navbar from "@/components/ui/Navbar"
 
 // Animation variants
 const fadeIn = {
@@ -151,7 +151,7 @@ export default function Home() {
   return (
     <>
     <Navbar/>
-    <div className="h-[30rem] bg-gradient-to-br from-blue-100 to-teal-100 flex items-center justify-center p-4">
+    <div className="min-h-[calc(100vh-9rem)] bg-gradient-to-br from-blue-100 to-teal-100 flex items-center justify-center p-4">
       <motion.div
         className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-2xl"
         initial="hidden"
