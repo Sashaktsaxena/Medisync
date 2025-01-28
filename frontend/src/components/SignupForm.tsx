@@ -39,10 +39,12 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
       }
   
       // Verify user was actually created
-      if (data.user) {
+      const user=data.user
+      if (user) {
         const { error: userDataError } = await supabase
-          .from("Users")
+          .from("profiles")
           .insert({
+            id:user.id,
             Name: name,
             Phone: phone,
             Email: email,

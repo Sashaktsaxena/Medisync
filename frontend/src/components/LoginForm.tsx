@@ -3,7 +3,8 @@ import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-
+import { supabase } from "@/lib/supabaseClient"
+import {useRouter} from "next/navigation"
 interface LoginFormProps {
   onSwitchToSignup: () => void
 }
@@ -11,11 +12,32 @@ interface LoginFormProps {
 export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  const router=useRouter()
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle login logic here
-    console.log("Login:", { email, password })
+    setLoading(true)
+    setError(null)
+
+    try {
+      const { error: loginError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (loginError) {
+        setError(loginError.message)
+      } else {
+        console.log("Login successful")
+        router.push("/Symptom")
+        // Redirect or handle successful login
+      }
+    } catch (err) {
+      setError("Login failed")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -27,6 +49,7 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
       className="w-full max-w-md"
     >
       <h2 className="text-3xl font-bold mb-6 text-center text-primary">Login to Medisync</h2>
+      {error && <p className="text-red-500 text-center">{error}</p>}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <Label htmlFor="email">Email</Label>
@@ -50,8 +73,8 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
             className="w-full"
           />
         </div>
-        <Button type="submit" className="w-full">
-          Login
+        <Button type="submit" className="w-full" disabled={loading}>
+          {loading ? "Logging in..." : "Login"}
         </Button>
       </form>
       <p className="mt-4 text-center">
@@ -63,4 +86,3 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
     </motion.div>
   )
 }
-
