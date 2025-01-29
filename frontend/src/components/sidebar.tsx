@@ -21,7 +21,7 @@ export function Sidebar({ onOpenChange }: SidebarProps) {
 
   return (
     <div
-      className={`fixed top-0 left-0 h-full bg-gray-800 text-white transition-all duration-300 ease-in-out ${
+      className={`fixed top-0 left-0 h-full bg-gray-800 text-white transition-all duration-300 ease-in-out z-50 md:z-auto ${
         isOpen ? "w-64" : "w-16"
       }`}
       onMouseEnter={() => handleOpenChange(true)}

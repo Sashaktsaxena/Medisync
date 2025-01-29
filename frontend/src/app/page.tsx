@@ -4,19 +4,27 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import Navbar from "@/components/ui/Navbar"
+import { FloatingNav } from "@/components/ui/floating-navbar"
 import { FileText, MessageSquare, Stethoscope, Watch, Phone, Video, Send, Camera } from "lucide-react"
 import Link from "next/link"
+
+const navItems = [
+  { name: "Home", link: "#home" },
+  { name: "Features", link: "#features" },
+  { name: "Contact", link: "#contact" }
+]
 
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
+      <FloatingNav navItems={navItems} />
       <main className="flex-1">
-        <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-blue-50">
+        <section id="home" className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-blue-50">
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center space-y-4 text-center">
               <div className="space-y-2">
-                <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
+                <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl">
                   Welcome to Medisync
                 </h1>
                 <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl">
@@ -34,41 +42,13 @@ export default function Home() {
           <div className="container px-4 md:px-6">
             <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-center mb-12">Our Features</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <FeatureCard
-                icon={<FileText className="h-10 w-10 mb-4 text-blue-500" />}
-                title="Prescription Analysis"
-                description="Upload your prescription for AI-powered analysis and information."
-              />
-              <FeatureCard
-                icon={<MessageSquare className="h-10 w-10 mb-4 text-green-500" />}
-                title="AI Chatbot"
-                description="Get help for minor injuries with our sentiment-analyzing chatbot."
-              />
-              <FeatureCard
-                icon={<Stethoscope className="h-10 w-10 mb-4 text-purple-500" />}
-                title="Symptom Checker"
-                description="Enter your symptoms to get probable disease information."
-              />
-              <FeatureCard
-                icon={<Watch className="h-10 w-10 mb-4 text-indigo-500" />}
-                title="Health Tracking"
-                description="Track your health metrics using wearable devices."
-              />
-              <FeatureCard
-                icon={<Phone className="h-10 w-10 mb-4 text-red-500" />}
-                title="Emergency Assistance"
-                description="One-click emergency ambulance calling feature."
-              />
-              <FeatureCard
-                icon={<Video className="h-10 w-10 mb-4 text-yellow-500" />}
-                title="Virtual Consultation"
-                description="Connect with healthcare professionals via video calls."
-              />
-              <FeatureCard
-                icon={<Camera className="h-10 w-10 mb-4 text-pink-500" />}
-                title="Rash & Injury Analysis"
-                description="Upload photos of rashes or injuries for AI-powered diagnosis and treatment suggestions."
-              />
+              <FeatureCard icon={<FileText className="h-10 w-10 mb-4 text-blue-500" />} title="Prescription Analysis" description="Upload your prescription for AI-powered analysis and information." />
+              <FeatureCard icon={<MessageSquare className="h-10 w-10 mb-4 text-green-500" />} title="AI Chatbot" description="Get help for minor injuries with our sentiment-analyzing chatbot." />
+              <FeatureCard icon={<Stethoscope className="h-10 w-10 mb-4 text-purple-500" />} title="Symptom Checker" description="Enter your symptoms to get probable disease information." />
+              <FeatureCard icon={<Watch className="h-10 w-10 mb-4 text-indigo-500" />} title="Health Tracking" description="Track your health metrics using wearable devices." />
+              <FeatureCard icon={<Phone className="h-10 w-10 mb-4 text-red-500" />} title="Emergency Assistance" description="One-click emergency ambulance calling feature." />
+              <FeatureCard icon={<Video className="h-10 w-10 mb-4 text-yellow-500" />} title="Virtual Consultation" description="Connect with healthcare professionals via video calls." />
+              <FeatureCard icon={<Camera className="h-10 w-10 mb-4 text-pink-500" />} title="Rash & Injury Analysis" description="Upload photos of rashes or injuries for AI-powered diagnosis and treatment suggestions." />
             </div>
           </div>
         </section>
@@ -111,4 +91,3 @@ function FeatureCard({ icon, title, description }) {
     </div>
   )
 }
-
