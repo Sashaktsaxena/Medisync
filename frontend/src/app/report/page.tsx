@@ -8,20 +8,60 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { FileUpload } from "@/components/ui/file-upload"
+import { supabase } from "@/lib/supabaseClient"
+import { Sidebar } from "@/components/sidebar"
 
 export default function MedisyncReportAnalyser() {
   const [file, setFile] = useState<File | null>(null)
   const [question, setQuestion] = useState("")
   const [analysis, setAnalysis] = useState("")
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
-  const handleFileChange = (files: File[]) => {
-    if (files.length > 0) {
-      setFile(files[0])
-      setTimeout(() => {
-        setAnalysis(`Analysis of ${files[0].name}: This is a sample analysis of the uploaded medical report.`)
-      }, 2000)
+const handleFileChange = async (files: File[]) => {
+  if (files.length > 0) {
+    try {
+      const selectedFile = files[0];
+      
+      // Ensure user is properly authenticated
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !user) {
+        console.error("Authentication error:", authError);
+        alert("Please login to upload files");
+        return;
+      }
+
+      // Sanitize filename
+      const sanitizedName = selectedFile.name
+        .replace(/[^a-zA-Z0-9-_.]/g, '_')
+        .replace(/\s+/g, '_');
+      
+      const filePath = `${user.id}/${sanitizedName}`;
+
+      // Upload with error handling
+      const { data, error } = await supabase.storage
+        .from("Report")
+        .upload(filePath, selectedFile, {
+          upsert: true,
+          cacheControl: '3600',
+        });
+
+      if (error) {
+        console.error("Storage error:", error);
+        alert(`Upload failed: ${error.message}`);
+        return;
+      }
+
+      console.log("Upload successful:", data);
+      setFile(selectedFile);
+
+    } catch (error) {
+      console.error("Unexpected error:", error);
+      alert("An unexpected error occurred");
     }
   }
+};
+  
 
   const handleQuestionSubmit = (event: React.FormEvent) => {
     event.preventDefault()
@@ -37,6 +77,12 @@ export default function MedisyncReportAnalyser() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-100 to-indigo-200 flex flex-col justify-between p-4 sm:p-6 md:p-8">
+        <Sidebar onOpenChange={setIsSidebarOpen} />
+              <main
+                className={`flex-1 p-4 md:p-8 pl-20 md:pl-4 transition-all duration-300 ease-in-out ${
+                    isSidebarOpen ? "md:ml-64" : "md:ml-16"
+                  }`}
+        >
       <div className="flex-grow flex items-center justify-center">
         <Card className="w-full max-w-3xl mx-auto shadow-xl">
           <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-t-lg">
@@ -115,6 +161,7 @@ export default function MedisyncReportAnalyser() {
           </CardContent>
         </Card>
       </div>
+      </main>
     </main>
   )
 }
