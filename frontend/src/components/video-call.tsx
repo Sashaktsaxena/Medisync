@@ -4,16 +4,13 @@ import { useEffect, useRef, useState } from "react"
 import Peer from "peerjs"
 import { supabase } from "@/lib/supabaseClient"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Phone, PhoneOff, Mic, MicOff, Video, VideoOff, X } from "lucide-react"
+import { Phone, PhoneOff, Mic, MicOff, Video, VideoOff } from "lucide-react"
 
 export default function VideoCall() {
   const [peerId, setPeerId] = useState<string | null>(null)
-  const [remotePeerId, setRemotePeerId] = useState("")
   const [peer, setPeer] = useState<Peer | null>(null)
   const [call, setCall] = useState<Peer.MediaConnection | null>(null)
-  const [callStatus, setCallStatus] = useState<"idle" | "incoming" | "outgoing" | "connected">("idle")
+  const [callStatus, setCallStatus] = useState<"idle" | "incoming" | "connected">("idle")
   const [isMuted, setIsMuted] = useState(false)
   const [isVideoOff, setIsVideoOff] = useState(false)
   const userVideoRef = useRef<HTMLVideoElement>(null)
@@ -22,7 +19,9 @@ export default function VideoCall() {
 
   useEffect(() => {
     async function initializePeer() {
-      const { data: { user } } = await supabase.auth.getUser()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
       if (!user) return
 
       const newPeer = new Peer(user.id)
@@ -45,41 +44,36 @@ export default function VideoCall() {
     initializePeer()
   }, [])
 
-  // Rest of the component remains the same...
-  const startCall = () => {
-    if (!remotePeerId) {
-      alert("Enter a valid Peer ID to call.")
-      return
+  useEffect(() => {
+    if (call && callStatus === "connected") {
+      navigator.mediaDevices
+        .getUserMedia({ video: true, audio: true })
+        .then((stream) => {
+          userStreamRef.current = stream
+          if (userVideoRef.current) {
+            userVideoRef.current.srcObject = stream
+          }
+          call.answer(stream)
+          call.on("stream", (remoteStream) => {
+            if (remoteVideoRef.current) {
+              remoteVideoRef.current.srcObject = remoteStream
+            }
+          })
+        })
+        .catch((error) => {
+          console.error("Error accessing media devices:", error)
+        })
     }
-
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
-      userStreamRef.current = stream
-      userVideoRef.current!.srcObject = stream
-      const outgoingCall = peer!.call(remotePeerId, stream)
-      setCall(outgoingCall)
-      setCallStatus("outgoing")
-
-      outgoingCall.on("stream", (remoteStream) => {
-        remoteVideoRef.current!.srcObject = remoteStream
-        setCallStatus("connected")
-      })
-    })
-  }
+  }, [call, callStatus])
 
   const answerCall = () => {
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
-      userStreamRef.current = stream
-      userVideoRef.current!.srcObject = stream
-      call!.answer(stream)
-      call!.on("stream", (remoteStream) => {
-        remoteVideoRef.current!.srcObject = remoteStream
-      })
-      setCallStatus("connected")
-    })
+    setCallStatus("connected")
   }
 
   const rejectCall = () => {
-    call!.close()
+    if (call) {
+      call.close()
+    }
     setCall(null)
     setCallStatus("idle")
   }
@@ -93,8 +87,12 @@ export default function VideoCall() {
     }
     setCall(null)
     setCallStatus("idle")
-    userVideoRef.current!.srcObject = null
-    remoteVideoRef.current!.srcObject = null
+    if (userVideoRef.current) {
+      userVideoRef.current.srcObject = null
+    }
+    if (remoteVideoRef.current) {
+      remoteVideoRef.current.srcObject = null
+    }
   }
 
   const toggleMute = () => {
@@ -114,56 +112,60 @@ export default function VideoCall() {
   }
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle>Video Call</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="text-sm text-muted-foreground">
-          Your Peer ID: <span className="font-mono text-primary">{peerId}</span>
-        </div>
-        {callStatus === "idle" && (
-          <div className="flex space-x-2">
-            <Input
-              type="text"
-              placeholder="Enter remote Peer ID"
-              value={remotePeerId}
-              onChange={(e) => setRemotePeerId(e.target.value)}
-            />
-            <Button onClick={startCall}>
-              <Phone className="mr-2 h-4 w-4" /> Call
-            </Button>
+    <div className="h-screen w-full flex flex-col bg-black ">
+      {callStatus === "idle" && (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-lg mb-4">Waiting for a call...</p>
+            <p className="text-sm text-muted-foreground">
+              Your Peer ID: <span className="font-mono text-primary">{peerId}</span>
+            </p>
           </div>
-        )}
-        {callStatus === "incoming" && (
-          <div className="flex justify-center space-x-2">
-            <Button onClick={answerCall} variant="default">
-              <Phone className="mr-2 h-4 w-4" /> Answer
-            </Button>
-            <Button onClick={rejectCall} variant="destructive">
-              <X className="mr-2 h-4 w-4" /> Reject
-            </Button>
-          </div>
-        )}
-        {callStatus === "outgoing" && <div className="text-center text-muted-foreground">Calling...</div>}
-        <div className="grid grid-cols-2 gap-4">
-          <video ref={userVideoRef} autoPlay playsInline muted className="w-full aspect-video bg-muted rounded-lg" />
-          <video ref={remoteVideoRef} autoPlay playsInline className="w-full aspect-video bg-muted rounded-lg" />
         </div>
-      </CardContent>
-      {callStatus === "connected" && (
-        <CardFooter className="justify-center space-x-2">
-          <Button onClick={toggleMute} variant="outline" size="icon">
-            {isMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-          </Button>
-          <Button onClick={toggleVideo} variant="outline" size="icon">
-            {isVideoOff ? <VideoOff className="h-4 w-4" /> : <Video className="h-4 w-4" />}
-          </Button>
-          <Button onClick={endCall} variant="destructive" size="icon">
-            <PhoneOff className="h-4 w-4" />
-          </Button>
-        </CardFooter>
       )}
-    </Card>
+
+      {callStatus === "incoming" && (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center space-y-4">
+            <p className="text-xl font-semibold">Incoming Call</p>
+            <div className="flex justify-center space-x-4">
+              <Button onClick={answerCall} variant="default" size="lg">
+                <Phone className="mr-2 h-5 w-5" /> Answer
+              </Button>
+              <Button onClick={rejectCall} variant="destructive" size="lg">
+                <PhoneOff className="mr-2 h-5 w-5" /> Reject
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {callStatus === "connected" && (
+        <>
+          <div className="flex-1 grid grid-cols-2 gap-4 p-4">
+          <div className="relative bg-gray-200 rounded-lg overflow-hidden">
+            <video ref={userVideoRef} autoPlay playsInline muted className="absolute inset-0 w-full h-full object-cover" />
+            </div>
+          <div className="relative bg-gray-200 rounded-lg overflow-hidden">
+            <video ref={remoteVideoRef} autoPlay playsInline className="absolute inset-0 w-full h-full object-cover" />
+            </div>
+          </div>
+          <div className="flex justify-center items-center mb-4">
+          <div className="bg-background p-4 flex justify-center space-x-4  rounded-xl w-2/5">
+            <Button onClick={toggleMute} variant="outline" size="icon">
+              {isMuted ? <MicOff className="h-8 w-8" /> : <Mic className="h-8 w-8" />}
+            </Button>
+            <Button onClick={toggleVideo} variant="outline" size="icon">
+              {isVideoOff ? <VideoOff className="h-8 w-8" /> : <Video className="h-8 w-8" />}
+            </Button>
+            <Button onClick={endCall} variant="destructive" size="icon">
+              <PhoneOff className="h-8 w-8" />
+            </Button>
+          </div>
+          </div>
+        </>
+      )}
+    </div>
   )
 }
+

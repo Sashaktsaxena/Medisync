@@ -4,11 +4,11 @@ import { useEffect, useState } from "react"
 import { Sidebar } from "@/components/sidebar"
 import { supabase } from "@/lib/supabaseClient"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Calendar, Clock, User } from "lucide-react"
+import { Calendar, Clock, User, Video } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Video } from "lucide-react"
 import { useRouter } from "next/navigation"
+
 interface UserDetails {
   name: string
   email: string
@@ -21,6 +21,9 @@ interface Appointment {
   appointment_date: string
   appointment_time: string
   status: string
+  patient?: {
+    id: string
+  }
   doctor: {
     name: string
     specialty: string
@@ -32,7 +35,26 @@ export default function DashboardPage() {
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null)
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
-  const router =useRouter()
+  const router = useRouter()
+
+  const isAppointmentNow = (date: string, time: string) => {
+    const now = new Date();
+    const [timeStr, period] = time.split(" ");
+    const [hours, minutes] = timeStr.split(":");
+    
+    let hour = parseInt(hours);
+    if (period === "PM" && hour !== 12) {
+      hour += 12;
+    } else if (period === "AM" && hour === 12) {
+      hour = 0;
+    }
+    const appointmentTime = new Date(date);
+    appointmentTime.setHours(hour, parseInt(minutes), 0);
+    const timeDiff = Math.abs(now.getTime() - appointmentTime.getTime());
+    // Allow starting call 5 minutes before and up to 30 minutes after appointment time
+    return timeDiff <= 30 * 60 * 1000 && now.getTime() >= appointmentTime.getTime() - 5 * 60 * 1000;
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       const { data: { user }, error: userError } = await supabase.auth.getUser()
@@ -57,7 +79,8 @@ export default function DashboardPage() {
             appointment_date,
             appointment_time,
             status,
-            doctor:doctors(name, specialty)
+            doctor:doctors(name, specialty),
+            patient:profiles(id)
           `)
           .eq("patient_id", user.id)
           .gte("appointment_date", new Date().toISOString().split('T')[0])
@@ -155,13 +178,15 @@ export default function DashboardPage() {
                     {appointment.appointment_time}
                   </div>
                   <div>
-                  <Button
-                      onClick={() => router.push('/consultation')}
-                      className="flex items-center space-x-2"
-                    >
-                      <Video className="w-4 h-4" />
-                      <span>Start Call</span>
-                    </Button>
+                    {/* {isAppointmentNow(appointment.appointment_date, appointment.appointment_time) && ( */}
+                      <Button
+                        onClick={() => router.push('/consultation')}
+                        className="flex items-center space-x-2"
+                      >
+                        <Video className="w-4 h-4" />
+                        <span>Start Call</span>
+                      </Button>
+                    {/* )} */}
                   </div>
                 </div>
               </CardContent>

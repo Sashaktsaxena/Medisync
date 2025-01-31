@@ -235,7 +235,7 @@ export default function DoctorDashboard() {
                       <span>{appointment.appointment_time}</span>
                     </div>
                   </div>
-                  {isAppointmentNow(appointment.appointment_date, appointment.appointment_time) && (
+                  {/* {isAppointmentNow(appointment.appointment_date, appointment.appointment_time) && ( */}
   <Button
     onClick={() => router.push(`/videodoc?patientId=${appointment.patient?.id}`)}
     className="flex items-center space-x-2"
@@ -243,7 +243,7 @@ export default function DoctorDashboard() {
     <Video className="w-4 h-4" />
     <span>Start Call</span>
   </Button>
-)}
+{/* )} */}
                 </div>
               </CardContent>
             </Card>
