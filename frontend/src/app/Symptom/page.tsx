@@ -59,14 +59,14 @@ function SymptomInput({ onAddSymptom }: { onAddSymptom: (symptom: string) => voi
   }
 
   return (
-    <div className="relative">
+    <div className="block">
       <input
         ref={inputRef}
         type="text"
         value={input}
         onChange={(e) => setInput(e.target.value)}
         placeholder="Type your symptoms..."
-        className="w-full p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full  p-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
       <AnimatePresence>
         {suggestions.length > 0 && (
@@ -83,7 +83,7 @@ function SymptomInput({ onAddSymptom }: { onAddSymptom: (symptom: string) => voi
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ delay: index * 0.05 }}
-                className="p-3 hover:bg-gray-100 cursor-pointer"
+                className="p-3 hover:bg-gray-100 cursor-pointer  "
                 onClick={() => handleAddSymptom(suggestion)}
               >
                 {suggestion}

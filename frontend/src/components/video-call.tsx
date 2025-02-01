@@ -112,7 +112,7 @@ export default function VideoCall() {
   }
 
   return (
-    <div className="h-screen w-full flex flex-col bg-black ">
+    <div className="h-screen w-full flex flex-col  bg-blue-100">
       {callStatus === "idle" && (
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
@@ -145,24 +145,60 @@ export default function VideoCall() {
           <div className="flex-1 grid grid-cols-2 gap-4 p-4">
           <div className="relative bg-gray-200 rounded-lg overflow-hidden">
             <video ref={userVideoRef} autoPlay playsInline muted className="absolute inset-0 w-full h-full object-cover" />
+            {isVideoOff && (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-75">
+                  <p className="text-white text-lg">Video Off</p>
+                </div>
+              )}
             </div>
           <div className="relative bg-gray-200 rounded-lg overflow-hidden">
             <video ref={remoteVideoRef} autoPlay playsInline className="absolute inset-0 w-full h-full object-cover" />
+
             </div>
           </div>
           <div className="flex justify-center items-center mb-4">
-          <div className="bg-background p-4 flex justify-center space-x-4  rounded-xl w-2/5">
-            <Button onClick={toggleMute} variant="outline" size="icon">
-              {isMuted ? <MicOff className="h-8 w-8" /> : <Mic className="h-8 w-8" />}
-            </Button>
-            <Button onClick={toggleVideo} variant="outline" size="icon">
-              {isVideoOff ? <VideoOff className="h-8 w-8" /> : <Video className="h-8 w-8" />}
-            </Button>
-            <Button onClick={endCall} variant="destructive" size="icon">
-              <PhoneOff className="h-8 w-8" />
-            </Button>
-          </div>
-          </div>
+         
+     <div className="bg-background p-4 flex justify-center space-x-4 rounded-xl bg-blue-800 transition-all duration-300 ease-in-out hover:shadow-2xl hover:translate-y-[-5px] hover:shadow-green-500/100">
+
+    <Button
+      onClick={toggleMute}
+      variant="outline"
+      size="icon"
+      className="transition-all duration-300 ease-in-out group hover:bg-green-500 hover:shadow-lg hover:scale-125"
+    >
+      {isMuted ? (
+        <MicOff className="h-10 w-10 transition-transform group-hover:scale-150 group-hover:rotate-12" />
+      ) : (
+        <Mic className="h-10 w-10 transition-transform group-hover:scale-150 group-hover:rotate-12" />
+      )}
+    </Button>
+
+    <Button
+      onClick={toggleVideo}
+      variant="outline"
+      size="icon"
+      className="transition-all duration-300 ease-in-out group hover:bg-green-500 hover:shadow-lg hover:scale-125"
+    >
+      {isVideoOff ? (
+        <VideoOff className="h-10 w-10 transition-transform group-hover:scale-150 group-hover:rotate-12" />
+      ) : (
+        <Video className="h-10 w-10 transition-transform group-hover:scale-150 group-hover:rotate-12" />
+      )}
+    </Button>
+
+    <Button
+      onClick={endCall}
+      variant="destructive"
+      size="icon"
+      className="transition-all duration-300 ease-in-out group hover:bg-red-700 hover:shadow-lg hover:scale-125"
+    >
+      <PhoneOff className="h-10 w-10 transition-transform group-hover:scale-150 group-hover:rotate-12" />
+    </Button>
+  </div>
+</div>
+
+
+
         </>
       )}
     </div>

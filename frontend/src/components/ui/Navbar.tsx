@@ -25,7 +25,7 @@ export default function Navbar() {
         <div className="bg-white-200 w-full rounded-3xl border border-black min-h-[90px] shadow-xl shadow-black flex justify-between items-center p-5">
           <div className="flex items-center">
             <Stethoscope className="h-6 w-6" />
-            <span className="ml-2 text-2xl font-bold hidden sm:inline">Medisync</span>
+            <span className="ml-2 text-2xl font-bold sm:inline">Medisync</span>
           </div>
           <div className="text-black font-bold text-3xl"></div>
           <nav className="hidden sm:flex space-x-4 text-xl text-black">
@@ -43,18 +43,18 @@ export default function Navbar() {
             </Link>
           </nav>
           <div className="sm:hidden">
-            <button onClick={() => setIsOpen(true)} className="text-black">
+            <button onClick={() => setIsOpen(true)} className="text-black z-50 relative">
               <Menu className="h-6 w-6" />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Sliding drawer */}
+      {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 right-0 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${isOpen ? "translate-x-0" : "translate-x-full"} sm:hidden`}
+        className={`fixed inset-y-0 right-0 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out z-50 ${isOpen ? "translate-x-0" : "translate-x-full"} sm:hidden`}
       >
-        <div className="p-5">
+        <div className="p-5 relative">
           <button onClick={() => setIsOpen(false)} className="absolute top-5 right-5 text-black">
             <X className="h-6 w-6" />
           </button>
@@ -75,11 +75,14 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Overlay */}
+      {/* Dark Background Effect on Rest of Screen */}
       {isOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 sm:hidden" onClick={() => setIsOpen(false)}></div>
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 sm:hidden z-40" 
+          onClick={() => setIsOpen(false)}
+          style={{ width: "calc(100% - 16rem)" }} // Ensures sidebar remains unaffected
+        ></div>
       )}
     </>
   )
 }
-

@@ -68,7 +68,7 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
           return;
         }
 
-        router.push("/Symptom"); // Redirect to patient dashboard
+        router.push("/dashboard"); // Redirect to patient dashboard
       }
     } catch (err) {
       setError("Login failed");
