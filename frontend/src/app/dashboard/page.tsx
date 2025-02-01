@@ -27,6 +27,7 @@ interface Appointment {
   doctor: {
     name: string
     specialty: string
+    id:string 
   }
 }
 
@@ -79,7 +80,7 @@ export default function DashboardPage() {
             appointment_date,
             appointment_time,
             status,
-            doctor:doctors(name, specialty),
+            doctor:doctors(name, specialty,id),
             patient:profiles(id)
           `)
           .eq("patient_id", user.id)
@@ -180,7 +181,7 @@ export default function DashboardPage() {
                   <div>
                     {/* {isAppointmentNow(appointment.appointment_date, appointment.appointment_time) && ( */}
                       <Button
-                        onClick={() => router.push('/consultation')}
+                        onClick={() => router.push(`/consultation?doctorId=${appointment.doctor?.id}`)}
                         className="flex items-center space-x-2"
                       >
                         <Video className="w-4 h-4" />

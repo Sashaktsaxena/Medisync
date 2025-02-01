@@ -6,7 +6,17 @@ import { supabase } from "@/lib/supabaseClient"
 import { Button } from "@/components/ui/button"
 import { Phone, PhoneOff, Mic, MicOff, Video, VideoOff } from "lucide-react"
 
-export default function VideoCall() {
+interface PatVideoProps {
+  doctorId: string | null;
+}
+
+interface UserNames {
+  doctorName: string;
+  patientName: string;
+}
+
+
+export default function VideoCall({ doctorId }: PatVideoProps) {
   const [peerId, setPeerId] = useState<string | null>(null)
   const [peer, setPeer] = useState<Peer | null>(null)
   const [call, setCall] = useState<Peer.MediaConnection | null>(null)
@@ -16,7 +26,50 @@ export default function VideoCall() {
   const userVideoRef = useRef<HTMLVideoElement>(null)
   const remoteVideoRef = useRef<HTMLVideoElement>(null)
   const userStreamRef = useRef<MediaStream | null>(null)
+  const [names, setNames] = useState<UserNames>({
+    doctorName: "",
+    patientName: "",
+  });
+  useEffect(() => {
+    async function fetchNames() {
+      try {
+        // Get current doctor's info
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) return;
 
+        // Fetch doctor's name from doctors table
+        const { data: doctorData, error: doctorError } = await supabase
+          .from("doctors")
+          .select("name")
+          .eq("id", doctorId)
+          .single();
+
+        if (doctorError) throw doctorError;
+
+        // Fetch patient's name from patients table
+        const { data: patientData, error: patientError } = await supabase
+          .from("profiles")
+          .select("Name")
+          .eq("id", user.id)
+          .single();
+
+        if (patientError) throw patientError;
+
+        setNames({
+          doctorName: doctorData.name,
+          patientName: patientData.Name,
+        });
+      } catch (error) {
+        console.error("Error fetching names:", error);
+      }
+    }
+
+    if (doctorId) {
+      fetchNames();
+    }
+  }, [doctorId]);
   useEffect(() => {
     async function initializePeer() {
       const {
@@ -150,10 +203,15 @@ export default function VideoCall() {
                   <p className="text-white text-lg">Video Off</p>
                 </div>
               )}
+              <div className="absolute bottom-4 left-4 bg-black bg-opacity-50 px-3 py-1 rounded-lg">
+  <p className="text-white font-semibold"> {names.patientName}</p>
+</div>
             </div>
           <div className="relative bg-gray-200 rounded-lg overflow-hidden">
             <video ref={remoteVideoRef} autoPlay playsInline className="absolute inset-0 w-full h-full object-cover" />
-
+            <div className="absolute bottom-4 left-4 bg-black bg-opacity-50 px-3 py-1 rounded-lg">
+                <p className="text-white font-semibold">{names.doctorName}</p>
+              </div>
             </div>
           </div>
           <div className="flex justify-center items-center mb-4">
