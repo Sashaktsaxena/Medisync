@@ -2,48 +2,86 @@
 
 import { useEffect, useState } from "react"
 import { Sidebar } from "@/components/sidebar"
-import { supabase } from "@/lib/supabaseClient" // Ensure this is correctly set up
+import { supabase } from "@/lib/supabaseClient"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Calendar, Clock, User } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Video } from "lucide-react"
+import { useRouter } from "next/navigation"
+interface UserDetails {
+  name: string
+  email: string
+  phone: string
+  createdAt: string
+}
+
+interface Appointment {
+  id: string
+  appointment_date: string
+  appointment_time: string
+  status: string
+  doctor: {
+    name: string
+    specialty: string
+  }
+}
 
 export default function DashboardPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const [userDetails, setUserDetails] = useState(null)
+  const [userDetails, setUserDetails] = useState<UserDetails | null>(null)
+  const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
-
-  // Fetch user details
+  const router =useRouter()
   useEffect(() => {
-    const fetchUserDetails = async () => {
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser()
-
+    const fetchData = async () => {
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      
       if (userError || !user) {
         console.error("Error fetching user:", userError)
         setLoading(false)
         return
       }
 
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("Name, Email, Phone, created_at")
-        .eq("id", user.id)
-        .single()
+      const [profileData, appointmentsData] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("Name, Email, Phone, created_at")
+          .eq("id", user.id)
+          .single(),
+        
+        supabase
+          .from("appointments")
+          .select(`
+            id,
+            appointment_date,
+            appointment_time,
+            status,
+            doctor:doctors(name, specialty)
+          `)
+          .eq("patient_id", user.id)
+          .gte("appointment_date", new Date().toISOString().split('T')[0])
+          .order("appointment_date", { ascending: true })
+          .order("appointment_time", { ascending: true })
+      ])
 
-      if (error) {
-        console.error("Error fetching user details:", error)
-      } else {
+      if (profileData.data) {
         setUserDetails({
-          name: data.Name || "N/A",
-          email: data.Email || "N/A",
-          phone: data.Phone || "N/A",
-          createdAt: data.created_at || "N/A",
+          name: profileData.data.Name || "N/A",
+          email: profileData.data.Email || "N/A",
+          phone: profileData.data.Phone || "N/A",
+          createdAt: profileData.data.created_at || "N/A",
         })
+      }
+
+      if (appointmentsData.data) {
+        setAppointments(appointmentsData.data)
       }
 
       setLoading(false)
     }
 
-    fetchUserDetails()
+    fetchData()
   }, [])
 
   if (loading) {
@@ -59,28 +97,77 @@ export default function DashboardPage() {
       <Sidebar onOpenChange={setIsSidebarOpen} />
       <main
         className={`flex-1 p-4 md:p-8 pl-20 md:pl-4 transition-all duration-300 ease-in-out ${
-            isSidebarOpen ? "md:ml-64" : "md:ml-16"
-          }`}
+          isSidebarOpen ? "md:ml-64" : "md:ml-16"
+        }`}
       >
-        <h1 className="text-3xl font-bold mb-6">User Details</h1>
-        <div className="bg-white shadow-md rounded-lg p-6">
-          <h2 className="text-2xl font-semibold mb-4">{userDetails.name}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <p>
-                <strong>Email:</strong> {userDetails.email}
-              </p>
-              <p>
-                <strong>Phone:</strong> {userDetails.phone}
-              </p>
+        <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+        
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>User Details</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p className="font-semibold">{userDetails.name}</p>
+                <p>Email: {userDetails.email}</p>
+                <p>Phone: {userDetails.phone}</p>
+              </div>
+              <div>
+                <p>Account Created: {new Date(userDetails.createdAt).toLocaleDateString()}</p>
+              </div>
             </div>
-            <div>
-              <p>
-                <strong>Account Created:</strong> {new Date(userDetails.createdAt).toLocaleDateString()}
-              </p>
-            </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
+
+        <h2 className="text-2xl font-bold mb-4">Upcoming Appointments</h2>
+        {appointments.length === 0 ? (
+          <Card>
+            <CardContent className="p-6">
+              <p>No upcoming appointments</p>
+            </CardContent>
+          </Card>
+        ) : (
+          appointments.map((appointment) => (
+            <Card key={appointment.id} className="mb-4">
+              <CardContent className="p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="font-semibold text-lg">
+                       {appointment.doctor.name}
+                    </h3>
+                    <p className="text-gray-600">{appointment.doctor.specialty}</p>
+                  </div>
+                  <Badge variant={
+                    appointment.status === "confirmed" ? "success" :
+                    appointment.status === "pending" ? "warning" : "secondary"
+                  }>
+                    {appointment.status}
+                  </Badge>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center">
+                    <Calendar className="w-4 h-4 mr-2" />
+                    {appointment.appointment_date}
+                  </div>
+                  <div className="flex items-center">
+                    <Clock className="w-4 h-4 mr-2" />
+                    {appointment.appointment_time}
+                  </div>
+                  <div>
+                  <Button
+                      onClick={() => router.push('/consultation')}
+                      className="flex items-center space-x-2"
+                    >
+                      <Video className="w-4 h-4" />
+                      <span>Start Call</span>
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
       </main>
     </div>
   )

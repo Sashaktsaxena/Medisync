@@ -4,13 +4,15 @@ import { useEffect, useRef, useState } from "react"
 import Peer from "peerjs"
 import { supabase } from "@/lib/supabaseClient"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Phone, PhoneOff, Mic, MicOff, Video, VideoOff, X } from "lucide-react"
 
-export default function VideoCall() {
+interface DocVideoProps {
+  patientId: string | null
+}
+
+export default function DocVideo({ patientId }: DocVideoProps) {
   const [peerId, setPeerId] = useState<string | null>(null)
-  const [remotePeerId, setRemotePeerId] = useState("")
   const [peer, setPeer] = useState<Peer | null>(null)
   const [call, setCall] = useState<Peer.MediaConnection | null>(null)
   const [callStatus, setCallStatus] = useState<"idle" | "incoming" | "outgoing" | "connected">("idle")
@@ -28,6 +30,7 @@ export default function VideoCall() {
       const newPeer = new Peer(user.id)
       newPeer.on("open", (id) => {
         setPeerId(id)
+        if (patientId) startCall(newPeer, patientId)
       })
 
       newPeer.on("call", (incomingCall) => {
@@ -43,19 +46,13 @@ export default function VideoCall() {
     }
 
     initializePeer()
-  }, [])
+  }, [patientId])
 
-  // Rest of the component remains the same...
-  const startCall = () => {
-    if (!remotePeerId) {
-      alert("Enter a valid Peer ID to call.")
-      return
-    }
-
+  const startCall = (peerInstance: Peer, remoteId: string) => {
     navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
       userStreamRef.current = stream
       userVideoRef.current!.srcObject = stream
-      const outgoingCall = peer!.call(remotePeerId, stream)
+      const outgoingCall = peerInstance.call(remoteId, stream)
       setCall(outgoingCall)
       setCallStatus("outgoing")
 
@@ -122,19 +119,6 @@ export default function VideoCall() {
         <div className="text-sm text-muted-foreground">
           Your Peer ID: <span className="font-mono text-primary">{peerId}</span>
         </div>
-        {callStatus === "idle" && (
-          <div className="flex space-x-2">
-            <Input
-              type="text"
-              placeholder="Enter remote Peer ID"
-              value={remotePeerId}
-              onChange={(e) => setRemotePeerId(e.target.value)}
-            />
-            <Button onClick={startCall}>
-              <Phone className="mr-2 h-4 w-4" /> Call
-            </Button>
-          </div>
-        )}
         {callStatus === "incoming" && (
           <div className="flex justify-center space-x-2">
             <Button onClick={answerCall} variant="default">
@@ -145,7 +129,7 @@ export default function VideoCall() {
             </Button>
           </div>
         )}
-        {callStatus === "outgoing" && <div className="text-center text-muted-foreground">Calling...</div>}
+        {callStatus === "outgoing" && <div className="text-center text-muted-foreground">Calling patient...</div>}
         <div className="grid grid-cols-2 gap-4">
           <video ref={userVideoRef} autoPlay playsInline muted className="w-full aspect-video bg-muted rounded-lg" />
           <video ref={remoteVideoRef} autoPlay playsInline className="w-full aspect-video bg-muted rounded-lg" />
